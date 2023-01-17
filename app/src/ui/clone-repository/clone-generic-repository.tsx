@@ -12,12 +12,16 @@ interface ICloneGenericRepositoryProps {
   /** The path to which the repository should be cloned. */
   readonly path: string
 
+  readonly branch?: string
+
   /** Called when the destination path changes. */
   readonly onPathChanged: (path: string) => void
 
   /** Called when the URL to clone changes. */
   readonly onUrlChanged: (url: string) => void
 
+  /** Called when the BRANCH to clone from changes. */
+  readonly onBranchChanged: (branch: string) => void
   /**
    * Called when the user should be prompted to choose a directory to clone to.
    */
@@ -46,6 +50,15 @@ export class CloneGenericRepository extends React.Component<
               </span>
             }
           />
+        </Row>
+
+        <Row>
+            <TextBox
+              value={this.props.branch}
+              label="Branch"
+              placeholder="Uses default if blank"
+              onValueChanged={this.props.onBranchChanged}
+            />
         </Row>
 
         <Row>

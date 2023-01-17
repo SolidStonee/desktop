@@ -120,6 +120,8 @@ interface IBaseTabState {
   /** The local path to clone to. */
   readonly path: string | null
 
+  readonly branch: string | null
+
   /** The user-entered URL or `owner/name` shortcut. */
   readonly url: string
 }
@@ -172,6 +174,7 @@ export class CloneRepository extends React.Component<
       lastParsedIdentifier: null,
       path: defaultDirectory,
       url: this.props.initialURL || '',
+      branch: null
     }
 
     this.state = {
@@ -313,6 +316,10 @@ export class CloneRepository extends React.Component<
     this.setSelectedTabState({ path }, this.validatePath)
   }
 
+  private onBranchChanged = (branch: string) => {
+    this.setSelectedTabState({ branch })
+  }
+
   private renderActiveTab() {
     const tab = this.props.selectedTab
 
@@ -323,8 +330,10 @@ export class CloneRepository extends React.Component<
           <CloneGenericRepository
             path={tabState.path ?? ''}
             url={tabState.url}
+            branch={tabState.branch ?? ""}
             onPathChanged={this.onPathChanged}
             onUrlChanged={this.updateUrl}
+            onBranchChanged={this.onBranchChanged}
             onChooseDirectory={this.onChooseDirectory}
           />
         )
@@ -722,6 +731,7 @@ export class CloneRepository extends React.Component<
   }
 
   private clone = async () => {
+    const tabState = this.getSelectedTabState()
     this.setState({ loading: true })
 
     const cloneInfo = await this.resolveCloneInfo()
@@ -743,11 +753,15 @@ export class CloneRepository extends React.Component<
       return
     }
 
-    const { url, defaultBranch } = cloneInfo
+    const { url, defaultBranch} = cloneInfo
 
     this.props.dispatcher.closeFoldout(FoldoutType.Repository)
     try {
-      this.cloneImpl(url.trim(), path, defaultBranch)
+      if(tabState.branch){
+        this.cloneImpl(url.trim(), path, tabState.branch)
+      }else{
+        this.cloneImpl(url.trim(), path, defaultBranch)
+      }
     } catch (e) {
       log.error(`CloneRepository: clone failed to complete to ${path}`, e)
       this.setState({ loading: false })
@@ -755,8 +769,8 @@ export class CloneRepository extends React.Component<
     }
   }
 
-  private cloneImpl(url: string, path: string, defaultBranch?: string) {
-    this.props.dispatcher.clone(url, path, { defaultBranch })
+  private cloneImpl(url: string, path: string, branch?: string, defaultBranch?: string) {
+    this.props.dispatcher.clone(url, path, { branch, defaultBranch })
     this.props.onDismissed()
 
     setDefaultDir(Path.resolve(path, '..'))

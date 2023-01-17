@@ -73,5 +73,7 @@ export async function clone(
 
   args.push('--', url, path)
 
+  log.debug(args.toString())
+
   await git(args, __dirname, 'clone', opts)
 }
